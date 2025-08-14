@@ -1,0 +1,307 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "API для выбора служебного автомобиля",
+        "description": "API метод получения списка доступных текущему пользователю на запланированное время автомобилей с возможностью фильтрации по модели автомобиля, по категории комфорта",
+        "contact": {
+            "email": "masyanov.aleksei@gmail.com"
+        },
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Авторизация и получение Bearer токена (данные для авторизации подставлены из сидера, нужно просто нажать Execute)",
+                "operationId": "222b2625838e3c57e017987f73598fda",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "example": "dir@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "example": "secret"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Bearer Token",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "token": {
+                                            "type": "string",
+                                            "example": "2|CkDCul..."
+                                        },
+                                        "bearer_token": {
+                                            "type": "string",
+                                            "example": "Bearer 2|CkDCul..."
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/cars/available": {
+            "get": {
+                "tags": [
+                    "Cars"
+                ],
+                "summary": "Получить доступные автомобили по фильтрам и времени",
+                "description": "Возвращает список автомобилей, доступных для поездок в указанный промежуток времени по заданным фильтрам",
+                "operationId": "getAvailableCars",
+                "parameters": [
+                    {
+                        "name": "model",
+                        "in": "query",
+                        "description": "Фильтр по модели автомобиля",
+                        "required": false,
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "description": "Фильтр по категории автомобиля (id категории)",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "format": "int64"
+                        }
+                    },
+                    {
+                        "name": "start_time",
+                        "in": "query",
+                        "description": "Начало периода доступности автомобиля (формат: YYYY-MM-DD HH:MM:SS)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-08-13 09:00:00"
+                        }
+                    },
+                    {
+                        "name": "end_time",
+                        "in": "query",
+                        "description": "Конец периода доступности автомобиля (формат: YYYY-MM-DD HH:MM:SS)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-08-13 18:00:00"
+                        }
+                    }
+                ],
+                "responses": {
+                    "401": {
+                        "description": "Неавторизованный пользователь"
+                    },
+                    "422": {
+                        "description": "Ошибка валидации параметров запроса"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/cars/booked": {
+            "get": {
+                "tags": [
+                    "Cars"
+                ],
+                "summary": "Получить забронированные автомобили по времени",
+                "description": "Возвращает список автомобилей, которые заняты (забронированы) хотя бы на часть заданного периода и указывает, кто их забронировал",
+                "operationId": "getBookedCars",
+                "parameters": [
+                    {
+                        "name": "start_time",
+                        "in": "query",
+                        "description": "Начало периода запроса (формат: YYYY-MM-DD HH:MM:SS)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-08-13 09:00:00"
+                        }
+                    },
+                    {
+                        "name": "end_time",
+                        "in": "query",
+                        "description": "Конец периода запроса (формат: YYYY-MM-DD HH:MM:SS)",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "date-time",
+                            "example": "2025-08-13 18:00:00"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Список забронированных автомобилей",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "cars": {
+                                            "type": "array",
+                                            "items": {
+                                                "properties": {
+                                                    "id": {
+                                                        "description": "ID автомобиля",
+                                                        "type": "integer",
+                                                        "example": 3
+                                                    },
+                                                    "model": {
+                                                        "description": "Модель автомобиля",
+                                                        "type": "string",
+                                                        "example": "Ford Focus"
+                                                    },
+                                                    "car_category_id": {
+                                                        "description": "ID категории автомобиля",
+                                                        "type": "integer",
+                                                        "example": 1
+                                                    },
+                                                    "driver": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 6
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Петр Петров"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "carCategory": {
+                                                        "properties": {
+                                                            "id": {
+                                                                "type": "integer",
+                                                                "example": 1
+                                                            },
+                                                            "name": {
+                                                                "type": "string",
+                                                                "example": "Седан"
+                                                            }
+                                                        },
+                                                        "type": "object"
+                                                    },
+                                                    "trips": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "properties": {
+                                                                "id": {
+                                                                    "type": "integer",
+                                                                    "example": 15
+                                                                },
+                                                                "start_time": {
+                                                                    "type": "string",
+                                                                    "example": "2025-08-13 12:00:00"
+                                                                },
+                                                                "end_time": {
+                                                                    "type": "string",
+                                                                    "example": "2025-08-13 14:00:00"
+                                                                },
+                                                                "user": {
+                                                                    "properties": {
+                                                                        "id": {
+                                                                            "type": "integer",
+                                                                            "example": 9
+                                                                        },
+                                                                        "name": {
+                                                                            "type": "string",
+                                                                            "example": "Анна Смирнова"
+                                                                        },
+                                                                        "email": {
+                                                                            "type": "string",
+                                                                            "example": "anna@example.com"
+                                                                        }
+                                                                    },
+                                                                    "type": "object"
+                                                                }
+                                                            },
+                                                            "type": "object"
+                                                        }
+                                                    }
+                                                },
+                                                "type": "object"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Неавторизованный пользователь"
+                    },
+                    "422": {
+                        "description": "Ошибка валидации параметров запроса"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "description": "Bearer token (токен из /login)",
+                "name": "Authorization",
+                "in": "header",
+                "bearerFormat": "JWT",
+                "scheme": "bearer"
+            },
+            "sanctum": {
+                "type": "apiKey",
+                "description": "Enter token in format (Bearer <token>)",
+                "name": "Authorization",
+                "in": "header"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Cars",
+            "description": "Cars"
+        }
+    ]
+}
